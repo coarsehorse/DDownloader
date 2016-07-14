@@ -1,6 +1,7 @@
 package com.ddownloader;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 import com.ddownloader.view.MainLayoutController;
 
@@ -13,6 +14,8 @@ import javafx.stage.Stage;
 
 public class Main extends Application {
 	
+	public static ArrayList<Thread> onlineThreads;
+	
 	private Stage primaryStage;
 	
 	@Override
@@ -24,7 +27,19 @@ public class Main extends Application {
 		
 		loadMainLayout();
 	}
-
+	
+	@Override
+	public void init() {
+		onlineThreads = new ArrayList<Thread>();
+	}
+	
+	@Override
+	public void stop() {
+    	if (!onlineThreads.isEmpty())
+    		for (Thread t : onlineThreads)
+    			t.stop();
+	}
+	
 	public static void main(String[] args) {
 		launch(args);
 	}

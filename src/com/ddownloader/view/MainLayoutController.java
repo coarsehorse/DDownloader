@@ -36,13 +36,16 @@ public class MainLayoutController {
 	private TextField savePath;
 	
 	@FXML
-	public ProgressBar downloadingPB = new ProgressBar();
+	public ProgressBar downloadingPB;
 	@FXML
 	public ProgressBar downloadedPB;
 
 	public int quantity;
 	public int doneQuantity;
+	
 	private Main main;
+	
+	private Thread downlThread;
 	
 	public void setMainLink(Main main) {
 		this.main = main;
@@ -51,6 +54,7 @@ public class MainLayoutController {
 	public MainLayoutController() {
 		quantity = 0;
 		doneQuantity = 0;
+		downlThread = null;
 	}
 	
 	@FXML
@@ -108,7 +112,7 @@ public class MainLayoutController {
 		else {
 			/* Pull data from textEdits */
 			String fileList = downloadPath.getText().replaceAll("\\\\", "/");
-			String saveDir = savePath.getText().replaceAll("\\\\", "/") + "/"; // Convert savePath path format 
+			String saveDir = savePath.getText().replaceAll("\\\\", "/") + "/"; // Convert savePath
 			/* TODO: + check if last symb == "/" */
 			
 			/* Get URLs */
@@ -142,12 +146,16 @@ public class MainLayoutController {
 						while (check == doneQuantity) {
 							Thread.sleep(1000);
 						}
-					}
-
+					}		
+					Main.onlineThreads.remove(Thread.currentThread());
+					
 					return null;
 				}
 			};
-			new Thread(downloadAll).start();
+			
+			Thread tempThread = new Thread(downloadAll);
+			Main.onlineThreads.add(tempThread);
+			tempThread.start();
 		}
 	}
 	
@@ -177,9 +185,14 @@ public class MainLayoutController {
 			protected Void call() throws Exception {
 				Downloader.downloadFile(URL, PATH, buffer);
 				
+				Main.onlineThreads.remove(Thread.currentThread());
+				
 				return null;
 			}
 		};
-		new Thread(downloadTask).start();
+		
+		downlThread = new Thread(downloadTask);
+		Main.onlineThreads.add(downlThread);
+		downlThread.start();
 	}
 }
