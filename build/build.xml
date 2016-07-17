@@ -84,11 +84,13 @@
 		<fx:resources id="appRes">
 			<fx:fileset dir="dist" includes="DDownloader.jar"/>
 			<fx:fileset dir="dist" includes="libs/*"/>
+			<fx:fileset dir="dist" includes="resources/**"/>
 		</fx:resources>
 	
 		<fx:application id="fxApplication"
 			name="DDownloader"
 			mainClass="com.ddownloader.Main"
+			 version="1.1beta"
 		/>
 	
 		<mkdir dir="build/classes/META-INF" />
@@ -104,7 +106,7 @@
 			<manifest>
 				<attribute name="Implementation-Vendor" value="com.heroys6.tools"/>
 				<attribute name="Implementation-Title" value="DDownloader"/>
-				<attribute name="Implementation-Version" value="v1.0beta"/>
+				<attribute name="Implementation-Version" value="v1.1beta"/>
 				<attribute name="JavaFX-Feature-Proxy" value="None"/>
 			</manifest>
 		</fx:jar>

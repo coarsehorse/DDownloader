@@ -37,18 +37,23 @@ public class Downloader {
 			try {
 				in = urlconn.getInputStream();
 			}
-			catch (IOException e) {
+			catch (IOException e) { // If something goes wrong
 				Platform.runLater(() -> mlController.throwAlert(e.getMessage()));
+				
 				mlController.doneQuantity++;
 				Platform.runLater(() ->
-				mlController.downloadedLabel.setText(mlController.doneQuantity + "/" + mlController.quantity)
+					mlController.downloadedLabel.setText(mlController.doneQuantity + "/" + mlController.quantity)
 				);
 				Platform.runLater(() ->
 					mlController.updateDownloadedPB((1.0 / mlController.quantity) * mlController.doneQuantity)
 				);
+				
 				Platform.runLater(() -> mlController.downloadingLabel.setText("Done"));
-				Platform.runLater(() -> mlController.sizeLabel.setText("Size:"));
-				Platform.runLater(() -> mlController.speedLabel.setText("Speed:"));
+				// Update downloadingPB is not need - it has not filled yet
+				
+				Platform.runLater(() -> mlController.sizeLabel.setText("-"));
+				Platform.runLater(() -> mlController.speedLabel.setText("-"));
+				
 				return;
 			}
 			
@@ -69,7 +74,7 @@ public class Downloader {
 			Double dTemp = new BigDecimal(size / Math.pow(10, 6))
 					.setScale(3, BigDecimal.ROUND_HALF_UP)
 					.doubleValue();
-			Platform.runLater(() -> mlController.sizeLabel.setText("Size: " + dTemp + " Mb"));
+			Platform.runLater(() -> mlController.sizeLabel.setText(dTemp + " Mb"));
 			
 			/* Set write stream */
 			OutputStream writer = new FileOutputStream(fullPath);
@@ -86,14 +91,14 @@ public class Downloader {
 				getted_b += i;
 				i_sum += i;
 				
-				mlController.updateDownloadingPB(size, i_sum); // with method cause lambda needs final values
+				mlController.updateDownloadingPB(size, i_sum); // with method because lambda needs final values
 				
 				if ((System.nanoTime() - delta_t) >= 1E9) { // If the second was over
 					Double speed = new BigDecimal(getted_b / Math.pow(10, 6))
 							.setScale(3, BigDecimal.ROUND_HALF_UP)
 							.doubleValue();
 
-					Platform.runLater(() -> mlController.speedLabel.setText("Speed: " + speed + " Mb/s"));
+					Platform.runLater(() -> mlController.speedLabel.setText(speed + " Mb/s"));
 					
 					delta_t = System.nanoTime(); // Set to zero
 					getted_b = 0.0;
@@ -109,8 +114,8 @@ public class Downloader {
 					);
 					
 					Platform.runLater(() -> mlController.downloadingLabel.setText("Done"));
-					Platform.runLater(() -> mlController.sizeLabel.setText("Size:"));
-					Platform.runLater(() -> mlController.speedLabel.setText("Speed:"));
+					Platform.runLater(() -> mlController.sizeLabel.setText("-"));
+					Platform.runLater(() -> mlController.speedLabel.setText("-"));
 				}
 			}
 			

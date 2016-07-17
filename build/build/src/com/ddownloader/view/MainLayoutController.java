@@ -36,12 +36,13 @@ public class MainLayoutController {
 	private TextField savePath;
 	
 	@FXML
-	public ProgressBar downloadingPB = new ProgressBar();
+	public ProgressBar downloadingPB;
 	@FXML
 	public ProgressBar downloadedPB;
 
 	public int quantity;
 	public int doneQuantity;
+	
 	private Main main;
 	
 	public void setMainLink(Main main) {
@@ -51,6 +52,18 @@ public class MainLayoutController {
 	public MainLayoutController() {
 		quantity = 0;
 		doneQuantity = 0;
+	}
+	
+	@FXML
+	private void stop_handler() {
+		main.stop();
+		
+		downloadingLabel.setText("");
+		downloadedLabel.setText("0/0");
+		sizeLabel.setText("-");
+		speedLabel.setText("-");
+		downloadedPB.setProgress(0.0);
+		updateDownloadingPB(100, 0); // Else downloading method will re-update it else
 	}
 	
 	@FXML
@@ -79,6 +92,9 @@ public class MainLayoutController {
 	
 	@FXML
 	private void download_handler() {
+		/* Stop possible download */
+		main.stop();
+		
 		/* Check readiness */
 		String errorMessage = "";
 		
@@ -86,8 +102,11 @@ public class MainLayoutController {
 			errorMessage += "\"File list or URL\" field is empty!\n";
 		if (savePath.getText().equals(""))
 			errorMessage += "\"Save Path\" field is empty!\n";
-		if (!errorMessage.equals(""))
+		if (!errorMessage.equals("")) {
 			throwAlert(errorMessage);
+			return;
+		}
+		doneQuantity = 0;
 		
 		/* DO simple download */
 		if (downloadPath.getText().split("/")[0].equals("http:") ||
@@ -99,7 +118,6 @@ public class MainLayoutController {
 			/* TODO: + check if last symb == "/" */
 			
 			quantity = 1;
-			doneQuantity = 0;
 
 			startDownload(URL, PATH);
 		}
@@ -107,7 +125,7 @@ public class MainLayoutController {
 		else {
 			/* Pull data from textEdits */
 			String fileList = downloadPath.getText().replaceAll("\\\\", "/");
-			String saveDir = savePath.getText().replaceAll("\\\\", "/") + "/"; // Convert savePath path format 
+			String saveDir = savePath.getText().replaceAll("\\\\", "/") + "/"; // Convert savePath
 			/* TODO: + check if last symb == "/" */
 			
 			/* Get URLs */
@@ -127,7 +145,6 @@ public class MainLayoutController {
 			}
 			
 			quantity = URLs.size();
-			doneQuantity = 0;
 			
 			/* Send each of URLs to download method */
 			Task<Void> downloadAll = new Task<Void>() {
@@ -141,12 +158,16 @@ public class MainLayoutController {
 						while (check == doneQuantity) {
 							Thread.sleep(1000);
 						}
-					}
-
+					}		
+					Main.onlineThreads.remove(Thread.currentThread());
+					
 					return null;
 				}
 			};
-			new Thread(downloadAll).start();
+			
+			Thread tempThread = new Thread(downloadAll);
+			Main.onlineThreads.add(tempThread);
+			tempThread.start();
 		}
 	}
 	
@@ -175,10 +196,14 @@ public class MainLayoutController {
 			@Override
 			protected Void call() throws Exception {
 				Downloader.downloadFile(URL, PATH, buffer);
+				Main.onlineThreads.remove(Thread.currentThread());
 				
 				return null;
 			}
 		};
-		new Thread(downloadTask).start();
+		
+		Thread downlThread = new Thread(downloadTask);
+		Main.onlineThreads.add(downlThread);
+		downlThread.start();
 	}
 }

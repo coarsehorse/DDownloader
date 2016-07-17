@@ -22,7 +22,7 @@ public class Main extends Application {
 	public void start(Stage primaryStage) {
 		this.primaryStage = primaryStage;
 		this.primaryStage.setTitle("DDownloader");
-		this.primaryStage.getIcons().add(new Image("file:Resources/Img/main-icon.png"));
+		this.primaryStage.getIcons().add(new Image("file:resources/img/main-icon.png"));
 		this.primaryStage.setResizable(false);
 		
 		loadMainLayout();

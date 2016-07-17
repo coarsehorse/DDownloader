@@ -45,8 +45,6 @@ public class MainLayoutController {
 	
 	private Main main;
 	
-	private Thread downlThread;
-	
 	public void setMainLink(Main main) {
 		this.main = main;
 	}
@@ -54,7 +52,18 @@ public class MainLayoutController {
 	public MainLayoutController() {
 		quantity = 0;
 		doneQuantity = 0;
-		downlThread = null;
+	}
+	
+	@FXML
+	private void stop_handler() {
+		main.stop();
+		
+		downloadingLabel.setText("");
+		downloadedLabel.setText("0/0");
+		sizeLabel.setText("-");
+		speedLabel.setText("-");
+		downloadedPB.setProgress(0.0);
+		updateDownloadingPB(100, 0); // Else downloading method will re-update it else
 	}
 	
 	@FXML
@@ -83,6 +92,9 @@ public class MainLayoutController {
 	
 	@FXML
 	private void download_handler() {
+		/* Stop possible download */
+		main.stop();
+		
 		/* Check readiness */
 		String errorMessage = "";
 		
@@ -94,17 +106,18 @@ public class MainLayoutController {
 			throwAlert(errorMessage);
 			return;
 		}
+		doneQuantity = 0;
+		
 		/* DO simple download */
 		if (downloadPath.getText().split("/")[0].equals("http:") ||
 				downloadPath.getText().split("/")[0].equals("https:")) {
-			String URL, PATH;
+			String URL, PATH, temp;
 			
 			URL = downloadPath.getText();
-			PATH = savePath.getText().replaceAll("\\\\", "/") + "/"; // Convert savePath path format 
-			/* TODO: + check if last symb == "/" */
+			temp = savePath.getText().replaceAll("\\\\", "/"); // If user/FileMan forgot '/'
+			PATH = temp += temp.toCharArray()[temp.length() - 1] == '/' ? "" : "/";
 			
 			quantity = 1;
-			doneQuantity = 0;
 
 			startDownload(URL, PATH);
 		}
@@ -112,12 +125,13 @@ public class MainLayoutController {
 		else {
 			/* Pull data from textEdits */
 			String fileList = downloadPath.getText().replaceAll("\\\\", "/");
-			String saveDir = savePath.getText().replaceAll("\\\\", "/") + "/"; // Convert savePath
-			/* TODO: + check if last symb == "/" */
+			String temp = savePath.getText().replaceAll("\\\\", "/"); // If user/FileMan forgot '/'
+			String saveDir = temp += temp.toCharArray()[temp.length() - 1] == '/' ? "" : "/";
 			
 			/* Get URLs */
 			ArrayList<String> URLs = new ArrayList<>();
-			String temp;
+			
+			temp = null;
 			
 			try {
 				BufferedReader reader = new BufferedReader(new FileReader(fileList));
@@ -132,7 +146,6 @@ public class MainLayoutController {
 			}
 			
 			quantity = URLs.size();
-			doneQuantity = 0;
 			
 			/* Send each of URLs to download method */
 			Task<Void> downloadAll = new Task<Void>() {
@@ -184,14 +197,13 @@ public class MainLayoutController {
 			@Override
 			protected Void call() throws Exception {
 				Downloader.downloadFile(URL, PATH, buffer);
-				
 				Main.onlineThreads.remove(Thread.currentThread());
 				
 				return null;
 			}
 		};
 		
-		downlThread = new Thread(downloadTask);
+		Thread downlThread = new Thread(downloadTask);
 		Main.onlineThreads.add(downlThread);
 		downlThread.start();
 	}
