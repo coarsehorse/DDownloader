@@ -63,7 +63,7 @@ public class MainLayoutController {
 		sizeLabel.setText("-");
 		speedLabel.setText("-");
 		downloadedPB.setProgress(0.0);
-		updateDownloadingPB(100, 0); // Else downloading method will re-update it else
+		updateDownloadingPB(100, 0); // Else downloading method will re-update it
 	}
 	
 	@FXML
@@ -106,27 +106,26 @@ public class MainLayoutController {
 			throwAlert(errorMessage);
 			return;
 		}
+		
+		/* Get saveDir */
+		String temp = savePath.getText().replaceAll("\\\\", "/"); // If user/FileMan forgot '/'
+		String saveDir = temp += temp.toCharArray()[temp.length() - 1] == '/' ? "" : "/";
+		
 		doneQuantity = 0;
 		
 		/* DO simple download */
 		if (downloadPath.getText().split("/")[0].equals("http:") ||
-				downloadPath.getText().split("/")[0].equals("https:")) {
-			String URL, PATH, temp;
-			
-			URL = downloadPath.getText();
-			temp = savePath.getText().replaceAll("\\\\", "/"); // If user/FileMan forgot '/'
-			PATH = temp += temp.toCharArray()[temp.length() - 1] == '/' ? "" : "/";
-			
-			quantity = 1;
+			downloadPath.getText().split("/")[0].equals("https:"))
+		{	
+			String url = downloadPath.getText();
 
-			startDownload(URL, PATH);
+			quantity = 1;
+			startDownload(url, saveDir);
 		}
 		/* DO download from file list */
 		else {
 			/* Pull data from textEdits */
 			String fileList = downloadPath.getText().replaceAll("\\\\", "/");
-			String temp = savePath.getText().replaceAll("\\\\", "/"); // If user/FileMan forgot '/'
-			String saveDir = temp += temp.toCharArray()[temp.length() - 1] == '/' ? "" : "/";
 			
 			/* Get URLs */
 			ArrayList<String> URLs = new ArrayList<>();

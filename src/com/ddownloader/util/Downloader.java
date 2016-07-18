@@ -49,7 +49,6 @@ public class Downloader {
 				);
 				
 				Platform.runLater(() -> mlController.downloadingLabel.setText("Done"));
-				// Update downloadingPB is not need - it has not filled yet
 				
 				Platform.runLater(() -> mlController.sizeLabel.setText("-"));
 				Platform.runLater(() -> mlController.speedLabel.setText("-"));
