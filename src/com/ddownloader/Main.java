@@ -1,9 +1,9 @@
 package com.ddownloader;
 
+import com.ddownloader.view.MainLayoutController;
+
 import java.io.IOException;
 import java.util.ArrayList;
-
-import com.ddownloader.view.MainLayoutController;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
