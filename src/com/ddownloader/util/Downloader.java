@@ -34,26 +34,46 @@ public class Downloader {
 			/* Set input stream */
 			InputStream in = null;
 			
+			boolean gettedException = false;
+			
 			try {
 				in = urlconn.getInputStream();
 			}
-			catch (IOException e) { // If something goes wrong
-				Platform.runLater(() -> mlController.throwAlert(e.getMessage()));
-				
-				mlController.doneQuantity++;
-				Platform.runLater(() ->
-					mlController.downloadedLabel.setText(mlController.doneQuantity + "/" + mlController.quantity)
-				);
-				Platform.runLater(() ->
-					mlController.updateDownloadedPB((1.0 / mlController.quantity) * mlController.doneQuantity)
-				);
-				
-				Platform.runLater(() -> mlController.downloadingLabel.setText("Done"));
-				
-				Platform.runLater(() -> mlController.sizeLabel.setText("-"));
-				Platform.runLater(() -> mlController.speedLabel.setText("-"));
-				
-				return;
+			catch (IOException e) {
+				gettedException = true;
+				if (e.getMessage().split(" for URL: ")[0]
+						.equals("Server returned HTTP response code: 400")) {
+					url = e.getMessage().split(" for URL: ")[1].replaceAll(" ", "%20"); // Replace spaces
+					connection = new URL(url);
+					urlconn = (HttpURLConnection) connection.openConnection();
+					urlconn.setRequestMethod("GET");
+					size = urlconn.getContentLengthLong();
+					urlconn.connect();
+				}
+			}
+			
+			if (gettedException) { // Try again with url fix	
+				try {
+					in = urlconn.getInputStream();
+				}
+				catch (IOException e) {
+					Platform.runLater(() -> mlController.throwAlert(e.getMessage()));
+					
+					mlController.doneQuantity++;
+					Platform.runLater(() ->
+						mlController.downloadedLabel.setText(mlController.doneQuantity + "/" + mlController.quantity)
+					);
+					Platform.runLater(() ->
+						mlController.updateDownloadedPB((1.0 / mlController.quantity) * mlController.doneQuantity)
+					);
+					
+					Platform.runLater(() -> mlController.downloadingLabel.setText("Done"));
+					
+					Platform.runLater(() -> mlController.sizeLabel.setText("-"));
+					Platform.runLater(() -> mlController.speedLabel.setText("-"));
+					
+					return;
+				}
 			}
 			
 			/* Find file full path */
