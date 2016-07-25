@@ -16,10 +16,10 @@ import com.ddownloader.view.MainLayoutController;
 
 import javafx.application.Platform;
 
-public class Downloader {
+abstract public class Downloader {
 	
 	private static MainLayoutController mlController;
-	private static HashMap<String, String> mimeMap= new HashMap<String, String>();
+	private static HashMap<String, String> mimeMap = new HashMap<String, String>();
 	private static boolean mimeMapCreated = false;
 	
 	public static void setController(MainLayoutController c) {
@@ -31,11 +31,12 @@ public class Downloader {
 			/* Get connection */
 			URL connection = new URL(url);
 			HttpURLConnection urlconn;
-			long size;
+			long fileSize, downloadedBytes = 0;;
 			
 			urlconn = (HttpURLConnection) connection.openConnection();
 			urlconn.setRequestMethod("GET");
-			size = urlconn.getContentLengthLong();
+			//urlconn.setReq
+			fileSize = urlconn.getContentLengthLong();
 			urlconn.connect();
 			
 			/* Set input stream */
@@ -52,9 +53,10 @@ public class Downloader {
 						.equals("Server returned HTTP response code: 400")) {
 					url = e.getMessage().split(" for URL: ")[1].replaceAll(" ", "%20"); // Replace spaces
 					connection = new URL(url);
+					urlconn.disconnect();
 					urlconn = (HttpURLConnection) connection.openConnection();
 					urlconn.setRequestMethod("GET");
-					size = urlconn.getContentLengthLong();
+					fileSize = urlconn.getContentLengthLong();
 					urlconn.connect();
 				}
 			}
@@ -84,7 +86,7 @@ public class Downloader {
 			}
 			
 			/* Find file full path */
-			String headerVal = urlconn.getHeaderField("Content-Disposition");
+			String headerVal = urlconn.getHeaderField("Content-Disposition"); // Extract name
 			String fileName = null;
 			String fullPath = null;
 			
@@ -95,12 +97,17 @@ public class Downloader {
 				String contentType = urlconn.getContentType();
 				
 				if (contentType != null) {
-					if (!mimeMapCreated) createMimeMap();
+					if (!mimeMapCreated) {
+						Platform.runLater(() ->
+							mlController.downloadingLabel.setText("Pull MIME types from Apache svn..."));
+						createMimeMap();
+					}
 					
 					String extension = mimeMap.get(contentType);
 					String[] arr = url.split("/");
 					
-					fileName = arr[arr.length - 1] + "." + extension;
+					fileName = arr[arr.length - 1] +
+							(extension != null ? "." + extension : "");
 				}
 				else {
 					String[] arr = url.split("/");
@@ -112,8 +119,8 @@ public class Downloader {
 			fullPath = savePath + fileName;
 			
 			/* Set Labels */
-			String copyOffileName = fileName;
-			Platform.runLater(() -> mlController.downloadingLabel.setText(copyOffileName));
+			String copyOfFileName = fileName;
+			Platform.runLater(() -> mlController.downloadingLabel.setText(copyOfFileName));
 			Platform.runLater(() -> mlController.downloadingPB.setProgress(0.0));
 			
 			Platform.runLater(() ->
@@ -121,7 +128,7 @@ public class Downloader {
 			);
 			if (mlController.doneQuantity == 0) Platform.runLater(() -> mlController.downloadedPB.setProgress(0.0));
 			
-			Double dTemp = new BigDecimal(size / Math.pow(10, 6))
+			Double dTemp = new BigDecimal(fileSize / Math.pow(10, 6))
 					.setScale(3, BigDecimal.ROUND_HALF_UP)
 					.doubleValue();
 			Platform.runLater(() -> mlController.sizeLabel.setText(dTemp + " Mb"));
@@ -132,28 +139,27 @@ public class Downloader {
 			
 			/* Download */
 			int i = 0;
-			long i_sum = 0;
 			long delta_t = System.nanoTime();
-			double getted_b = 0.0;
+			double second_waiter = 0.0;
 			
 			while ((i = in.read(buffer)) > 0) {
 				writer.write(buffer, 0, i);
-				getted_b += i;
-				i_sum += i;
+				second_waiter += i;
+				downloadedBytes += i;
 				
-				mlController.updateDownloadingPB(size, i_sum); // with method because lambda needs final values
+				mlController.updateDownloadingPB(fileSize, downloadedBytes); // with method because lambda needs final values
 				
 				if ((System.nanoTime() - delta_t) >= 1E9) { // If the second was over
-					Double speed = new BigDecimal((getted_b / Math.pow(10, 6)))
+					Double speed = new BigDecimal((second_waiter / Math.pow(10, 6)))
 							.setScale(3, BigDecimal.ROUND_HALF_UP)
 							.doubleValue();
 
 					Platform.runLater(() -> mlController.speedLabel.setText(speed + " Mb/s"));
 					
 					delta_t = System.nanoTime(); // Set to zero
-					getted_b = 0.0;
+					second_waiter = 0.0;
 				}
-				if (size == i_sum) { // ==> Download is complete
+				if (downloadedBytes == fileSize) { // ==> Download is complete
 					mlController.doneQuantity++;
 					
 					Platform.runLater(() ->
@@ -173,8 +179,10 @@ public class Downloader {
 			writer.flush();
 			writer.close();
 			in.close();
+			urlconn.disconnect();
 		} catch (IOException e) {
 			e.printStackTrace();
+			Platform.runLater(() -> mlController.throwAlert(e.getMessage()));
 		}
 	}
 	
@@ -214,12 +222,14 @@ public class Downloader {
 				if (!parts[0].contains("#")) mimeMap.put(parts[0], parts[1].split(" ")[0]);
 			}
 			
-			br.close();
-			
 			mimeMapCreated = true;
+			
+			br.close();
+			f.delete();
 		}
 		catch (Exception e) {
 			e.printStackTrace();
+			Platform.runLater(() -> mlController.throwAlert(e.getMessage()));
 		}
 	}
 }
