@@ -40,22 +40,32 @@ public class MainLayoutController {
 	@FXML
 	public ProgressBar downloadedPB;
 
-	public int quantity;
-	public int doneQuantity;
+	public int quantity = 0;
+	public int doneQuantity = 0;
 	
 	private Main main;
+	public boolean downloadPaused = true;
+	
+	public MainLayoutController() {
+		// Stub
+	}
 	
 	public void setMainLink(Main main) {
 		this.main = main;
 	}
 	
-	public MainLayoutController() {
-		quantity = 0;
-		doneQuantity = 0;
+	@FXML
+	private void pauseHandler() {
+		downloadPaused = true;
 	}
 	
 	@FXML
-	private void stop_handler() {
+	private void resumeHandler() {
+		downloadPaused = false;
+	}
+	
+	@FXML
+	private void stopHandler() {
 		main.stop();
 		
 		downloadingLabel.setText("");
@@ -67,7 +77,7 @@ public class MainLayoutController {
 	}
 	
 	@FXML
-	private void fileListChoice_handler() {
+	private void fileListBrowseHandler() {
 		FileChooser fileChooser = new FileChooser();
 		FileChooser.ExtensionFilter
 			extFilter0 = new FileChooser.ExtensionFilter("Text file with links", "*.txt"),
@@ -82,7 +92,7 @@ public class MainLayoutController {
 	}
 	
 	@FXML
-	private void savePathChoice_handler() {
+	private void savePathBrowseHandler() {
 		DirectoryChooser dirChooser = new DirectoryChooser();
 		File saveDir = dirChooser.showDialog(main.getPrimaryStage());
 		
@@ -91,7 +101,7 @@ public class MainLayoutController {
 	}
 	
 	@FXML
-	private void download_handler() {
+	private void downloadHandler() {
 		/* Stop possible download */
 		main.stop();
 		
@@ -146,6 +156,11 @@ public class MainLayoutController {
 			
 			quantity = URLs.size();
 			
+			if (quantity < 1) {
+				throwAlert("Unsuitable file!\nExpected file format: one line - one URL");
+				return;
+			}
+			
 			/* Send each of URLs to download method */
 			Task<Void> downloadAll = new Task<Void>() {
 				@Override
@@ -153,8 +168,8 @@ public class MainLayoutController {
 					int check = -1;
 					
 					for (String str : URLs) {
-						startDownload(str, saveDir);
 						check = doneQuantity;
+						startDownload(str, saveDir);
 						while (check == doneQuantity) {
 							Thread.sleep(1000);
 						}
@@ -175,7 +190,7 @@ public class MainLayoutController {
 		Alert alert = new Alert(AlertType.WARNING);
 		
     	alert.initOwner(main.getPrimaryStage());
-    	alert.setTitle("Warning!");
+    	alert.setTitle("Warning");
     	alert.setContentText(alertText);
     	alert.showAndWait();
 	}
@@ -192,7 +207,9 @@ public class MainLayoutController {
 		final int buffer = 10000; // On my hardware no more makes sense
 		
 		Downloader.setController(this);
+		
 		Task<Void> downloadTask = new Task<Void>() {
+			
 			@Override
 			protected Void call() throws Exception {
 				Downloader.downloadFile(URL, PATH, buffer);
@@ -200,9 +217,13 @@ public class MainLayoutController {
 				
 				return null;
 			}
+			
 		};
 		
+		downloadPaused = false;
+		
 		Thread downlThread = new Thread(downloadTask);
+		
 		Main.onlineThreads.add(downlThread);
 		downlThread.start();
 	}

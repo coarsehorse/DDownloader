@@ -11,11 +11,13 @@
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="310.0" prefWidth="500.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.ddownloader.view.MainLayoutController">
    <children>
       <TextField fx:id="downloadPath" layoutX="97.0" layoutY="11.0" prefHeight="25.0" prefWidth="330.0" AnchorPane.rightAnchor="73.0" />
-      <Button layoutX="427.0" layoutY="11.0" mnemonicParsing="false" onAction="#fileListChoice_handler" text="Browse" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="11.0" />
+      <Button layoutX="427.0" layoutY="11.0" mnemonicParsing="false" onAction="#fileListBrowseHandler" text="Browse" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="11.0" />
       <TextField fx:id="savePath" layoutX="97.0" layoutY="55.0" prefHeight="25.0" prefWidth="330.0" AnchorPane.rightAnchor="73.0" />
-      <Button layoutX="435.0" layoutY="55.0" mnemonicParsing="false" onAction="#savePathChoice_handler" text="Browse" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="55.0" />
-      <Button layoutX="420.0" layoutY="105.0" mnemonicParsing="false" onAction="#download_handler" text="Download" AnchorPane.rightAnchor="60.0" AnchorPane.topAnchor="105.0" />
-      <Button layoutX="370.0" layoutY="105.0" mnemonicParsing="false" onAction="#stop_handler" text="Stop" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="105.0" />
+      <Button layoutX="435.0" layoutY="55.0" mnemonicParsing="false" onAction="#savePathBrowseHandler" text="Browse" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="55.0" />
+      <Button layoutX="250.0" layoutY="105.0" mnemonicParsing="false" onAction="#downloadHandler" text="Download" AnchorPane.rightAnchor="179.0" AnchorPane.topAnchor="105.0" />
+      <Button layoutX="331.0" layoutY="105.0" mnemonicParsing="false" onAction="#pauseHandler" text="Pause" AnchorPane.rightAnchor="122.0" AnchorPane.topAnchor="105.0" />
+      <Button layoutX="384.0" layoutY="105.0" mnemonicParsing="false" onAction="#resumeHandler" text="Resume" AnchorPane.rightAnchor="58.0" AnchorPane.topAnchor="105.0" />
+      <Button layoutX="370.0" layoutY="105.0" mnemonicParsing="false" onAction="#stopHandler" text="Stop" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="105.0" />
       <Label layoutX="10.0" layoutY="135.0" text="Downloaded:" />
       <Label fx:id="downloadedLabel" layoutX="107.0" layoutY="135.0" prefHeight="17.0" prefWidth="383.0" />
       <ProgressBar fx:id="downloadedPB" layoutX="10.0" layoutY="160.0" prefHeight="25.0" prefWidth="480.0" progress="0.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" />

@@ -31,7 +31,7 @@ abstract public class Downloader {
 			/* Get connection */
 			URL connection = new URL(url);
 			HttpURLConnection urlconn;
-			long fileSize, downloadedBytes = 0;;
+			long fileSize, downloadedBytes = 0;
 			
 			urlconn = (HttpURLConnection) connection.openConnection();
 			urlconn.setRequestMethod("GET");
@@ -47,7 +47,7 @@ abstract public class Downloader {
 			try {
 				in = urlconn.getInputStream();
 			}
-			catch (IOException e) {
+			catch (IOException e) { // Fix url(replace spaces with %20)
 				gettedException = true;
 				if (e.getMessage().split(" for URL: ")[0]
 						.equals("Server returned HTTP response code: 400")) {
@@ -61,7 +61,7 @@ abstract public class Downloader {
 				}
 			}
 			
-			if (gettedException) { // Try again with url fix	
+			if (gettedException) { // Try again with url fix
 				try {
 					in = urlconn.getInputStream();
 				}
@@ -147,7 +147,7 @@ abstract public class Downloader {
 				second_waiter += i;
 				downloadedBytes += i;
 				
-				mlController.updateDownloadingPB(fileSize, downloadedBytes); // with method because lambda needs final values
+				mlController.updateDownloadingPB(fileSize, downloadedBytes); // With method because lambda needs final values
 				
 				if ((System.nanoTime() - delta_t) >= 1E9) { // If the second was over
 					Double speed = new BigDecimal((second_waiter / Math.pow(10, 6)))
@@ -159,7 +159,7 @@ abstract public class Downloader {
 					delta_t = System.nanoTime(); // Set to zero
 					second_waiter = 0.0;
 				}
-				if (downloadedBytes == fileSize) { // ==> Download is complete
+				if (downloadedBytes == fileSize) { // If download is complete
 					mlController.doneQuantity++;
 					
 					Platform.runLater(() ->
@@ -173,6 +173,13 @@ abstract public class Downloader {
 					Platform.runLater(() -> mlController.sizeLabel.setText("-"));
 					Platform.runLater(() -> mlController.speedLabel.setText("-"));
 				}
+				while (mlController.downloadPaused) { // If download has paused
+					try {
+						Thread.sleep(500);
+					} catch (InterruptedException e) {
+						Platform.runLater(() -> mlController.throwAlert(e.getMessage()));
+					}
+				}
 			}
 			
 			/* Cleaning */
@@ -181,7 +188,6 @@ abstract public class Downloader {
 			in.close();
 			urlconn.disconnect();
 		} catch (IOException e) {
-			e.printStackTrace();
 			Platform.runLater(() -> mlController.throwAlert(e.getMessage()));
 		}
 	}
