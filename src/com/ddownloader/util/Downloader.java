@@ -10,6 +10,7 @@ import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import com.ddownloader.Main;
@@ -20,13 +21,30 @@ import javafx.application.Platform;
 abstract public class Downloader {
 	
 	private static MainLayoutController mlController;
+	
 	private static HashMap<String, String> mimeMap = new HashMap<String, String>();
+	private static ArrayList<String> mimeTypes = new ArrayList<String>();
 	private static boolean mimeMapCreated = false;
 	
+	/**
+	 * Controller sets link on itself to give access to the UI
+	 * @param c
+	 * link on itself
+	 */
 	public static void setController(MainLayoutController c) {
 		mlController = c;
 	}
 	
+	/**
+	 * Downloading the file with UI updating during the downloading.
+	 * Method supports pausing and resuming.
+	 * @param url
+	 * URL of file to download
+	 * @param savePath
+	 * the directory in which the file will be downloaded(with last symbol "/")
+	 * @param buffSize
+	 * the maximum number of bytes that can be taken at a time 
+	 */
 	public static void downloadFile(String url, String savePath, int buffSize) {
 		try {
 			/* Get connection */
@@ -67,7 +85,6 @@ abstract public class Downloader {
 				}
 				catch (IOException e) {
 					Platform.runLater(() -> mlController.throwAlert(e.getMessage()));
-					
 					mlController.doneQuantity++;
 					Platform.runLater(() ->
 						mlController.downloadedLabel.setText(mlController.doneQuantity + "/" + mlController.quantity)
@@ -85,37 +102,49 @@ abstract public class Downloader {
 				}
 			}
 			
-			/* Find file full path */
-			String headerVal = urlconn.getHeaderField("Content-Disposition"); // Extract name
+			/* Find file name and create full path */
 			String fileName = null;
 			String fullPath = null;
 			
-			if (headerVal != null) {
-				fileName = headerVal.split("\"")[1];
-			}
-			else {
-				String contentType = urlconn.getContentType();
-				
-				if (contentType != null) {
-					if (!mimeMapCreated) {
-						Platform.runLater(() ->
-							mlController.downloadingLabel.setText("Pull MIME types from Apache svn..."));
-						createMimeMap();
-					}
-					
-					String extension = mimeMap.get(contentType);
-					String[] arr = url.split("/");
-					
-					fileName = arr[arr.length - 1] +
-							(extension != null ? "." + extension : "");
-				}
-				else {
-					String[] arr = url.split("/");
-					
-					fileName = arr[arr.length - 1];
-				}
-			}
+			String contentDispos = urlconn.getHeaderField("Content-Disposition"); // 1. Try to extract done name
 			
+			if (contentDispos != null) { // If name is in header
+				fileName = contentDispos.split("\"")[1];
+				// TODO improve Regex (filename=\"The.Walking.Dead.S06E01.1080p.HDTV.FOX HD.ts\")
+			}
+			else { // 2. Try to construct name from url
+				if (!mimeMapCreated) {
+					Platform.runLater(() ->
+						mlController.downloadingLabel.setText("Pull MIME types from Apache svn..."));
+					createMimeMap();
+				}
+				
+				String[] tArr = url.split("/"); // Separate name + extension(if is) from url
+				String possibleName = tArr[tArr.length - 1];
+				
+				tArr = possibleName.split("[.]"); // Separate extension
+				
+				if (mimeTypes.contains(tArr[tArr.length - 1])) { // Check extension
+					fileName = possibleName;
+				}
+				else { // Try to find extension by content-type
+					String contentType = urlconn.getContentType();
+					
+					tArr = url.split("/");
+					
+					if (contentType != null) { // If content-type is in header
+						String extension = mimeMap.get(contentType);
+						
+						if (extension != null) // And extension registered in Apache MIME types
+							fileName = tArr[tArr.length - 1] + "." + extension;
+						else
+							fileName = tArr[tArr.length - 1] + "." + "noformat";
+					}
+					else // Huh, I did everything I could(
+						fileName = tArr[tArr.length - 1] + "." + "noformat";
+				}	
+			}
+
 			fullPath = savePath + fileName;
 			
 			/* Set Labels */
@@ -193,11 +222,14 @@ abstract public class Downloader {
 			urlconn.disconnect();
 		} catch (IOException e) {
 			Platform.runLater(() -> mlController.throwAlert(e.getMessage()));
+			mlController.doneQuantity++;
 		}
 	}
 	
 	/**
 	 * Pull actual MIME list from Apache svn and save in HashMap
+	 * @author 
+	 * heroys6
 	 */
 	public static void createMimeMap() {
 		try {
@@ -234,7 +266,11 @@ abstract public class Downloader {
 			
 			while ((temp = br.readLine()) != null) {
 				parts = temp.split("	+");
-				if (!parts[0].contains("#")) mimeMap.put(parts[0], parts[1].split(" ")[0]);
+				if (!parts[0].contains("#")) { // Add content-type if not commented
+					mimeMap.put(parts[0], parts[1].split(" ")[0]);
+					for (String s : parts[1].split(" ")) // Consider all possible extensions
+						mimeTypes.add(s);
+				}
 			}
 			
 			mimeMapCreated = true;
@@ -243,7 +279,6 @@ abstract public class Downloader {
 			f.delete();
 		}
 		catch (Exception e) {
-			e.printStackTrace();
 			Platform.runLater(() -> mlController.throwAlert(e.getMessage()));
 		}
 	}

@@ -50,6 +50,11 @@ public class MainLayoutController {
 		// Stub
 	}
 	
+	/**
+	 * Main class sets link on itself to give access
+	 * @param main
+	 * link on Main class
+	 */
 	public void setMainLink(Main main) {
 		this.main = main;
 	}
@@ -186,6 +191,12 @@ public class MainLayoutController {
 		}
 	}
 	
+	/**
+	 * Throws alert window with information specified in parameter.
+	 * At least it useful for warnings
+	 * @param alertText
+	 * some information for user
+	 */
 	public void throwAlert(String alertText) {
 		Alert alert = new Alert(AlertType.WARNING);
 		
@@ -202,9 +213,21 @@ public class MainLayoutController {
 	public void updateDownloadedPB(double progress) {
 		Platform.runLater(() -> downloadedPB.setProgress(progress));
 	}
-
-	private void startDownload(String URL, String PATH) {
+	
+	/**
+	 * Starts a download in new thread.
+	 * This method was mainly written because final variables needs for lambda expression.
+	 * I think parameters of this function is preety good suit for this task.
+	 * And also to avoid code repetition.
+	 * @param url
+	 * url to download
+	 * @param path
+	 * the directory in which the file will be downloaded(with last symbol "/")
+	 */
+	private void startDownload(String url, String path) {
 		final int buffer = 10000; // On my hardware no more makes sense
+		
+		downloadPaused = false;
 		
 		Downloader.setController(this);
 		
@@ -212,19 +235,17 @@ public class MainLayoutController {
 			
 			@Override
 			protected Void call() throws Exception {
-				Downloader.downloadFile(URL, PATH, buffer);
-				Main.onlineThreads.remove(Thread.currentThread());
+				Downloader.downloadFile(url, path, buffer);
+				Main.onlineThreads.remove(Thread.currentThread()); // Thread done its work
 				
 				return null;
 			}
 			
 		};
 		
-		downloadPaused = false;
-		
 		Thread downlThread = new Thread(downloadTask);
 		
-		Main.onlineThreads.add(downlThread);
+		Main.onlineThreads.add(downlThread); // Control the active threads
 		downlThread.start();
 	}
 }
