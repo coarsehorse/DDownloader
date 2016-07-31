@@ -3,6 +3,7 @@ package com.ddownloader;
 import com.ddownloader.view.MainLayoutController;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 
 import javafx.application.Application;
@@ -14,7 +15,8 @@ import javafx.stage.Stage;
 
 public class Main extends Application {
 	
-	public static ArrayList<Thread> onlineThreads;
+	public static ArrayList<Thread> onlineThreads = new ArrayList<Thread>();
+	public static ArrayList<OutputStream> notClosedWriters = new ArrayList<OutputStream>();
 	
 	private Stage primaryStage;
 	
@@ -29,15 +31,23 @@ public class Main extends Application {
 	}
 	
 	@Override
-	public void init() {
-		onlineThreads = new ArrayList<Thread>();
-	}
-	
-	@Override
 	public void stop() {
     	if (!onlineThreads.isEmpty())
     		for (Thread t : onlineThreads)
-    			t.stop();
+    			t.stop();	
+    	onlineThreads.clear();
+    	
+    	if (!notClosedWriters.isEmpty()) {
+    		for (OutputStream w : notClosedWriters) {
+    			try {
+					w.flush();
+					w.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+    		}
+    	}
+    	notClosedWriters.clear();
 	}
 	
 	public static void main(String[] args) {

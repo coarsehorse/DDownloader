@@ -12,6 +12,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
 
+import com.ddownloader.Main;
 import com.ddownloader.view.MainLayoutController;
 
 import javafx.application.Platform;
@@ -35,7 +36,6 @@ abstract public class Downloader {
 			
 			urlconn = (HttpURLConnection) connection.openConnection();
 			urlconn.setRequestMethod("GET");
-			//urlconn.setReq
 			fileSize = urlconn.getContentLengthLong();
 			urlconn.connect();
 			
@@ -135,6 +135,9 @@ abstract public class Downloader {
 			
 			/* Set write stream */
 			OutputStream writer = new FileOutputStream(fullPath);
+			
+			Main.notClosedWriters.add(writer);
+			
 			byte buffer[] = new byte[buffSize]; // Max bytes per one reception
 			
 			/* Download */
@@ -183,6 +186,7 @@ abstract public class Downloader {
 			}
 			
 			/* Cleaning */
+			Main.notClosedWriters.remove(writer);
 			writer.flush();
 			writer.close();
 			in.close();
@@ -193,7 +197,7 @@ abstract public class Downloader {
 	}
 	
 	/**
-	 * Pull actual MIME list from Apache svn and save data HashMap
+	 * Pull actual MIME list from Apache svn and save in HashMap
 	 */
 	public static void createMimeMap() {
 		try {
@@ -207,14 +211,19 @@ abstract public class Downloader {
 			
 			InputStream in = urlconn.getInputStream();
 			OutputStream writer = new FileOutputStream("MIME.txt");
+			
+			Main.notClosedWriters.add(writer);
+			
 			int i = 0;
 			byte[] buffer = new byte[10000];
 			
 			while ((i = in.read(buffer)) > 0) 
 				writer.write(buffer, 0, i);
 			
+			Main.notClosedWriters.remove(writer);
 			writer.flush();
 			writer.close();
+			
 			in.close();
 			urlconn.disconnect();
 			
