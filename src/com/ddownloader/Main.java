@@ -24,7 +24,8 @@ public class Main extends Application {
 	public void start(Stage primaryStage) {
 		this.primaryStage = primaryStage;
 		this.primaryStage.setTitle("DDownloader");
-		this.primaryStage.getIcons().add(new Image("file:resources/img/main-icon.png"));
+		this.primaryStage.getIcons().add(new Image(
+				this.getClass().getResource("view/main-icon.png").toExternalForm()));
 		this.primaryStage.setResizable(false);
 		
 		loadMainLayout();
@@ -60,16 +61,18 @@ public class Main extends Application {
 			
 			loader.setLocation(Main.class.getResource("view/MainLayout.fxml"));
 			
-			AnchorPane anchorPane = (AnchorPane) loader.load();
-			
+			AnchorPane anchorPane = (AnchorPane) loader.load();		
 			Scene scene = new Scene(anchorPane);
+			
+			String css = this.getClass().getResource("view/style.css").toExternalForm();
+			
+			scene.getStylesheets().add(css);
 			
 			primaryStage.setScene(scene);
 			
 			MainLayoutController controller = loader.getController();
 			
 			controller.setMainLink(this);
-			
 			primaryStage.show();
 		}
 		catch (IOException e) {

@@ -116,7 +116,7 @@ public class MainLayoutController {
 		if (downloadPath.getText().equals(""))
 			errorMessage += "\"File list or URL\" field is empty!\n";
 		if (savePath.getText().equals(""))
-			errorMessage += "\"Save Path\" field is empty!\n";
+			errorMessage += "\"Save Path\" field is empty!";
 		if (!errorMessage.equals("")) {
 			throwAlert(errorMessage);
 			return;
@@ -202,6 +202,7 @@ public class MainLayoutController {
 		
     	alert.initOwner(main.getPrimaryStage());
     	alert.setTitle("Warning");
+    	alert.setHeaderText("Warning!");
     	alert.setContentText(alertText);
     	alert.showAndWait();
 	}
