@@ -1,5 +1,6 @@
 .root {
 	-fx-background-color: linear-gradient(red 0%, aqua 100%);
+	-fx-background-image: url("com/ddownloader/view/bg.jpg");
 }
 
 .label {
@@ -36,14 +37,14 @@
 }
 
 .button:focused {
-	-fx-color: #EDF1F2;
+	/*-fx-color: #EDF1F2;
     -fx-background-color: -fx-focus-color, -fx-outer-border, -fx-inner-border, -fx-body-color;
     -fx-background-insets: -1.4, 0, 1, 2;
-    -fx-background-radius:  6.4, 5, 4, 3;
+    -fx-background-radius:  6.4, 5, 4, 3;*/
 }
 
 .button:armed {
-	-fx-color: red;
+	-fx-color: white;
 }
 
 .progress-bar > .bar {

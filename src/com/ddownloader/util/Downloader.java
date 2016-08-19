@@ -108,7 +108,7 @@ abstract public class Downloader {
 			
 			String contentDispos = urlconn.getHeaderField("Content-Disposition"); // 1. Try to extract done name
 			
-			if (contentDispos != null) { // If name is in header
+			if (contentDispos != null) { // 1. If name is in header
 				fileName = contentDispos.split("\"")[1];
 				// TODO improve Regex (filename=\"The.Walking.Dead.S06E01.1080p.HDTV.FOX HD.ts\")
 			}
@@ -119,7 +119,7 @@ abstract public class Downloader {
 					createMimeMap();
 				}
 				
-				String[] tArr = url.split("/"); // Separate name + extension(if is) from url
+				String[] tArr = url.replaceAll("%20", " ").split("/"); // Separate name + extension(if is) from url
 				String possibleName = tArr[tArr.length - 1];
 				
 				tArr = possibleName.split("[.]"); // Separate extension
@@ -127,7 +127,7 @@ abstract public class Downloader {
 				if (mimeTypes.contains(tArr[tArr.length - 1])) { // Check extension
 					fileName = possibleName;
 				}
-				else { // Try to find extension by content-type
+				else { // 3. Try to find extension by content-type
 					String contentType = urlconn.getContentType();
 					
 					tArr = url.split("/");
@@ -135,13 +135,13 @@ abstract public class Downloader {
 					if (contentType != null) { // If content-type is in header
 						String extension = mimeMap.get(contentType);
 						
-						if (extension != null) // And extension registered in Apache MIME types
+						if (extension != null) // Extension registered in Apache MIME types
 							fileName = tArr[tArr.length - 1] + "." + extension;
-						else
-							fileName = tArr[tArr.length - 1] + "." + "noformat";
+						else // same as 4.
+							fileName = tArr[tArr.length - 1] + "." + "file";
 					}
-					else // Huh, I did everything I could(
-						fileName = tArr[tArr.length - 1] + "." + "noformat";
+					else // 4. Huh, I did everything I could(
+						fileName = tArr[tArr.length - 1] + "." + "file";
 				}	
 			}
 

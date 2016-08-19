@@ -18,6 +18,7 @@ import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Alert.AlertType;
 import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 import javafx.stage.DirectoryChooser;
 
 public class MainLayoutController {
@@ -204,6 +205,8 @@ public class MainLayoutController {
     	alert.setTitle("Warning");
     	alert.setHeaderText("Warning!");
     	alert.setContentText(alertText);
+    	
+    	((Stage) alert.getOwner()).setIconified(false); // Fix alert issue when main stage is minimized
     	alert.showAndWait();
 	}
 	
